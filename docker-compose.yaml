@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:6
+    container_name: lynx_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+      # if you have a gzip dump, auto-restore on first init:
+      - ./lynx-db.gzip:/docker-entrypoint-initdb.d/lynx-db.gzip:ro
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lynx_app
+    depends_on:
+      - mongo
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # your backend should read this and connect accordingly
+      - MONGO_URI=mongodb://mongo:27017/lynx-db
+    restart: unless-stopped
+
+volumes:
+  mongodata:
